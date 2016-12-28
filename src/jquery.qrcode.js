@@ -20,7 +20,7 @@
 		var createCanvas	= function(){
 			// create the qrcode itself
 			var qrcode	= new QRCode(options.typeNumber, options.correctLevel);
-			qrcode.addData(options.text);
+                        qrcode.addData(toUtf8(options.text));
 			qrcode.make();
 
 			// create canvas element
@@ -80,6 +80,29 @@
 			return $table;
 		}
   
+		var toUtf8 = function(str) {
+		    // escape对字符串进行编码时，字符值大于255的以"%u****"格式存储，而字符值大于255的恰好是非英文字符
+		    if (escape(str).indexOf("%u")<0) {
+		        return str;
+		    }
+		    var out, i, len, c;    
+		    out = "";    
+		    len = str.length;    
+		    for(i = 0; i < len; i++) {    
+			c = str.charCodeAt(i);    
+			if ((c >= 0x0001) && (c <= 0x007F)) {    
+			    out += str.charAt(i);    
+			} else if (c > 0x07FF) {    
+			    out += String.fromCharCode(0xE0 | ((c >> 12) & 0x0F));    
+			    out += String.fromCharCode(0x80 | ((c >>  6) & 0x3F));    
+			    out += String.fromCharCode(0x80 | ((c >>  0) & 0x3F));    
+			} else {    
+			    out += String.fromCharCode(0xC0 | ((c >>  6) & 0x1F));    
+			    out += String.fromCharCode(0x80 | ((c >>  0) & 0x3F));    
+			}    
+		    }    
+		    return out;    
+		} 
 
 		return this.each(function(){
 			var element	= options.render == "canvas" ? createCanvas() : createTable();
